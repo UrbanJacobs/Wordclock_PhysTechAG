@@ -58,6 +58,8 @@ Timezone myTZ;
 #define buttonPin   0
 #define LED_COUNT 256
 
+#define MAX_IDX (LED_COUNT - 1)
+
 
 /*********
   LED Config
@@ -65,7 +67,8 @@ Timezone myTZ;
 // Declare our NeoPixel strip object:
 Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRBW + NEO_KHZ800);
 //Declare matrix layout
-Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(16, 16, LED_PIN, NEO_MATRIX_TOP + NEO_MATRIX_LEFT + NEO_MATRIX_COLUMNS + NEO_MATRIX_ZIGZAG, NEO_RGBW + NEO_KHZ800);
+//Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(16, 16, LED_PIN, NEO_MATRIX_TOP + NEO_MATRIX_LEFT + NEO_MATRIX_COLUMNS + NEO_MATRIX_ZIGZAG, NEO_RGBW + NEO_KHZ800);
+Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(16, 16, LED_PIN, NEO_MATRIX_TOP + NEO_MATRIX_RIGHT + NEO_MATRIX_COLUMNS + NEO_MATRIX_ZIGZAG, NEO_RGBW + NEO_KHZ800);
 
 
 
@@ -478,7 +481,8 @@ void loop() {
 
     for (int i = 0; i < strip.numPixels(); i++) { // For each pixel in strip...
       if (lights[i] == 1) {
-        strip.setPixelColor(i, clockcolor);        //  Set pixel's color (in RAM)
+        //strip.setPixelColor(i, clockcolor);        //  Set pixel's color (in RAM)
+        strip.setPixelColor(MAX_IDX - i, clockcolor);
       }
     }
     strip.show();                          //  Update strip to match
