@@ -1,0 +1,7 @@
+Es gibt ein Problem mit der aktuellen Version der NeoPixel-Library (Version 1.12.2). Mit der resettet der ESP32 ständig. Version 1.11.0 funktioniert noch.
+
+
+Chip type: ESP32-D0WD-V3
+
+Netzwerkdaten:
+esp32-9E93E0	A8:42:E3:9E:93:E0
