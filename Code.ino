@@ -318,7 +318,16 @@ void setup() {
 
   if (!SPIFFS.begin()) {
     Serial.println("Failed to mount file system");
-    return;
+    if (!SPIFFS.format()) {
+      Serial.println("Formatting failed too");
+      return;
+    }
+    else {
+      if (!SPIFFS.begin()) {
+        Serial.println("Failed to mount file system after formatting");
+        return;
+      }
+    }
   }
 
   if (!loadConfig()) {
