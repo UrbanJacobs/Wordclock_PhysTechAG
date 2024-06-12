@@ -9,7 +9,8 @@
 */
 #include <ArduinoJson.h>
 #include <Adafruit_NeoPixel.h>
-#include <ESP8266WiFi.h>
+//#include <ESP8266WiFi.h>
+#include <WiFi.h>
 #include <Wire.h>  // Only needed for Arduino 1.6.5 and earlier
 #include "FS.h"
 #include <Adafruit_GFX.h>
@@ -17,16 +18,19 @@
 #ifndef PSTR
 #define PSTR // Make Arduino Due happy
 #endif
-#include <ESP8266WiFi.h>
-#include <ESP8266WebServer.h>
+//#include <ESP8266WiFi.h>
+//#include <ESP8266WebServer.h>
+#include <WebServer.h>
 #include <EEPROM.h>
 #include "ezTime.h"
+#include "SPIFFS.h"
 
 
 /*********
   Wifi Config
 ********/
-ESP8266WebServer    server(80);
+//ESP8266WebServer    server(80);
+WebServer    server(80);
 struct settings {
   char ssid[32];
   char password[63];
