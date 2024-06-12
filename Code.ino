@@ -63,9 +63,9 @@ Timezone myTZ;
   LED Config
 ********/
 // Declare our NeoPixel strip object:
-Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRBW + NEO_KHZ800);
 //Declare matrix layout
-Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(16, 16, LED_PIN, NEO_MATRIX_TOP + NEO_MATRIX_LEFT + NEO_MATRIX_COLUMNS + NEO_MATRIX_ZIGZAG, NEO_RGB + NEO_KHZ800);
+Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(16, 16, LED_PIN, NEO_MATRIX_TOP + NEO_MATRIX_LEFT + NEO_MATRIX_COLUMNS + NEO_MATRIX_ZIGZAG, NEO_RGBW + NEO_KHZ800);
 
 
 
