@@ -50,10 +50,13 @@ Timezone myTZ;
 /*********
   Pin Config
 ********/
+/*
 #define LED_PIN    D6
 #define buttonPin  D5
+*/
+#define LED_PIN    13
+#define buttonPin   0
 #define LED_COUNT 256
-
 
 
 /*********
