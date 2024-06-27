@@ -507,8 +507,17 @@ void loop() {
   }
 
 
-
-
+// Print time & IP address every 5 secs (for user info)
+#define INTERVAL 5000
+static unsigned int last_time = 0;
+if ((millis() - last_time > INTERVAL) || (millis() < last_time)) {
+  Serial.println("UTC:             " + UTC.dateTime());
+  Serial.print(F("Time in chosen location:     "));
+  Serial.println(myTZ.dateTime());
+  Serial.print("IP address: ");
+  Serial.println(WiFi.localIP());
+  last_time = millis();
+}
 
 
 }
