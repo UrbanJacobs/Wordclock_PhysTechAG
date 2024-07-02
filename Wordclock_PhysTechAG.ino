@@ -1,15 +1,23 @@
 /*
-  Release 1.01 20221005
-  Fixed bug preventing wifi details being saved  - moved EEPROM.begin to setup
-  Added some more debugging comments
+  The original code was taken from the following project:
+  https://hackaday.io/project/190207-esp8266-word-clock-on-16x16-led-matrix
 
-  Release history
-  Release 1.0 - fingers crossed
+  Some adaptions and extensions were made by PhysTechAG - see Git history.
 
+  PhysTechAG's Git repository:
+  https://github.com/UrbanJacobs/Wordclock_PhysTechAG
+
+  Direct link to history view:
+  https://github.com/UrbanJacobs/Wordclock_PhysTechAG/commits/master/
+
+  IMPORTANT NOTE: We had some struggles with the recent versions of the
+                  NeoPixel library (v1.12.2) on the ESP32. It made the
+                  device constantly reset. v1.11.0 was the last version
+                  that worked for us.
 */
+
 #include <ArduinoJson.h>
 #include <Adafruit_NeoPixel.h>
-//#include <ESP8266WiFi.h>
 #include <WiFi.h>
 #include <Wire.h>  // Only needed for Arduino 1.6.5 and earlier
 #include "FS.h"
@@ -18,8 +26,6 @@
 #ifndef PSTR
 #define PSTR // Make Arduino Due happy
 #endif
-//#include <ESP8266WiFi.h>
-//#include <ESP8266WebServer.h>
 #include <WebServer.h>
 #include <EEPROM.h>
 #include "ezTime.h"
@@ -29,7 +35,6 @@
 /*********
   Wifi Config
 ********/
-//ESP8266WebServer    server(80);
 WebServer    server(80);
 struct settings {
   char ssid[32];
@@ -50,10 +55,6 @@ Timezone myTZ;
 /*********
   Pin Config
 ********/
-/*
-#define LED_PIN    D6
-#define buttonPin  D5
-*/
 #define LED_PIN    13
 #define buttonPin   0
 #define LED_COUNT 256
@@ -67,7 +68,6 @@ Timezone myTZ;
 // Declare our NeoPixel strip object:
 Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRBW + NEO_KHZ800);
 //Declare matrix layout
-//Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(16, 16, LED_PIN, NEO_MATRIX_TOP + NEO_MATRIX_LEFT + NEO_MATRIX_COLUMNS + NEO_MATRIX_ZIGZAG, NEO_RGBW + NEO_KHZ800);
 Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(16, 16, LED_PIN, NEO_MATRIX_TOP + NEO_MATRIX_RIGHT + NEO_MATRIX_COLUMNS + NEO_MATRIX_ZIGZAG, NEO_RGBW + NEO_KHZ800);
 
 
@@ -104,7 +104,6 @@ int factoryReset = 0;
 uint32_t clockcolor;
 
 
-
 // Button timing variables
 int debounce = 20; // ms debounce period to prevent flickering when pressing or releasing the button
 int DCgap = 250; // max ms between clicks for a double click event
@@ -125,14 +124,7 @@ boolean holdEventPast = false; // whether or not the hold event happened already
 boolean longHoldEventPast = false;// whether or not the long hold event happened already
 
 
-
-
-
-
-
-
 //#define countof(a) (sizeof(a) / sizeof(a[0]))
-
 
 
 bool loadConfig() {
@@ -364,7 +356,6 @@ void handlePortal() {
     strncpy(mylocation, server.arg("location").c_str(), sizeof(mylocation) );
 
     char clockcolorraw[7];
-    char clockcolor[6];
     strncpy(clockcolorraw, server.arg("clockcolor").c_str(), sizeof(clockcolorraw));
     //for (int i = 1 ; i < 7 ; i++) clockcolor[(i - 1)] = clockcolorraw[i];
     R = 16 * char2num(clockcolorraw[1]) + char2num(clockcolorraw[2]);
@@ -392,7 +383,6 @@ void handlePortal() {
     server.send(200,   "text/html",  "<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'><title>Clock Setup</title><style>*,::after,::before{box-sizing:border-box;}body{margin:0;font-family:'Segoe UI',Roboto,'Helvetica Neue',Arial,'Noto Sans','Liberation Sans';font-size:1rem;font-weight:400;line-height:1.5;color:#212529;background-color:#f5f5f5;}.form-control{display:block;width:100%;height:calc(1.5em + .75rem + 2px);border:1px solid #ced4da;}button{border:1px solid transparent;color:#fff;background-color:#007bff;border-color:#007bff;padding:.5rem 1rem;font-size:1.25rem;line-height:1.5;border-radius:.3rem;width:100%}.form-signin{width:100%;max-width:400px;padding:15px;margin:auto;}h1,p{text-align: center}</style> </head> <body><main class='form-signin'> <h1>Wifi Setup</h1> <br/> <p>Your settings have been saved successfully!<br />Please restart the device if it does not restart itself within 30 seconds.</p></main></body></html>" );
 
     factoryReset = 0;
-    //sets back config to basic config and enables wifi access point.
     saveConfig();
     delay(5000);
     ESP.restart();
@@ -429,8 +419,6 @@ void setup() {
   Serial.begin(115200);
 
   EEPROM.begin(sizeof(struct settings));
-
-
 
   matrix.begin();
   matrix.setTextWrap(false);
@@ -521,7 +509,6 @@ void setup() {
 
     Serial.println("Clock should be running now");
 
-
   }
 
   if (bootmode == 1) {
@@ -532,33 +519,14 @@ void setup() {
   }
 
 
-
-
-
-
   server.on("/",  handlePortal);
   server.begin();
-
-
-
-
-
-
-
-
-
-  // textanim3();
 }
-
-
 
 
 void loop() {
   server.handleClient();
   events();
-
-
-
 
 
     buttonpressedtype =  checkButton();
@@ -570,8 +538,6 @@ void loop() {
         strip.setBrightness(brightness);
       }
     }
-
-
 
     if (displayanimation == 1) {
       if (clockminute == 0 && clockseconds == 0) {
@@ -618,15 +584,6 @@ void loop() {
       }
     }
     strip.show();                          //  Update strip to match
-    //} else {
-    // //too hot turn the LEDS off
-    // strip.clear();
-    // pixelcolor = strip.Color(0, 0, 0);
-    //for (int i = 0; i < strip.numPixels(); i++) { // For each pixel in strip...
-    // strip.setPixelColor(i, pixelcolor);        //  Set pixel's color (in RAM)
-    //}
-    ///strip.show();
-    //}
 
 
   if (factoryReset == 1) {
@@ -636,57 +593,28 @@ void loop() {
   }
 
 
-// Print time & IP address every 5 secs (for user info)
-#define INFO_INTERVAL 5000
-static unsigned int last_time = 0;
-if ((millis() - last_time > INFO_INTERVAL) || (millis() < last_time)) {
-  Serial.println("UTC: " + UTC.dateTime());
-  Serial.print(F("Time in chosen location: "));
-  Serial.println(myTZ.dateTime());
-  Serial.print("IP address: ");
-  if (mode == 0)
-    Serial.println(WiFi.localIP());
-  else
-    Serial.println("192.168.4.1 (Clock is Access Point)");
-  last_time = millis();
-}
-
-
-}
-
-
-
-
-
-/*
-  void loop()
-  {
-  // Get button event and act accordingly
-  int b = checkButton();
-  if (b == 1) clickEvent();
-  if (b == 2) doubleClickEvent();
-  if (b == 3) holdEvent();
-  if (b == 4) longHoldEvent();
+  // Print time & IP address every 5 secs (for user info)
+  #define INFO_INTERVAL 5000
+  static unsigned int last_time = 0;
+  if ((millis() - last_time > INFO_INTERVAL) || (millis() < last_time)) {
+    Serial.println("UTC: " + UTC.dateTime());
+    Serial.print(F("Time in chosen location: "));
+    Serial.println(myTZ.dateTime());
+    Serial.print("IP address: ");
+    if (mode == 0)
+      Serial.println(WiFi.localIP());
+    else
+      Serial.println("192.168.4.1 (Clock is Access Point)");
+    last_time = millis();
   }
 
-  //=================================================
-  // Events to trigger by click and press+hold
-
-*/
-
-
-
+}
 
 
 int checkButton() {
   int  event = 0;
   // Read the state of the button
   buttonVal = digitalRead(buttonPin);
-  /* if (buttonVal == HIGH) {
-     Serial.println("HIGH - pressed");
-    } else {
-     Serial.println("Low - NOT pressed");
-    }*/
 
   // Button pressed down
   if (buttonVal == LOW && buttonLast == HIGH && (millis() - upTime) > debounce) {
@@ -746,8 +674,6 @@ int checkButton() {
   buttonLast = buttonVal;
   return event;
 }
-
-
 
 
 void empty_lights_array() {
@@ -917,7 +843,6 @@ void fill_lights_array() {
       lights[81] = 1;
     }
   }
-
 
 
   int clockhourlookup = 0;
@@ -2982,7 +2907,6 @@ void theaterChaseRainbow(int wait) {
 }
 
 
-
 void colorWipe(uint32_t color, int wait) {
   for (int i = 0; i < strip.numPixels(); i++) { // For each pixel in strip...
     strip.setPixelColor(i, color);         //  Set pixel's color (in RAM)
@@ -2997,14 +2921,11 @@ void textanim() {
   int  pixelPerChar = 6;
   int  maxDisplacement;
 
-
   maxDisplacement = strlen(yourText) * pixelPerChar + matrix.width();
 
   clockhour = myTZ.hour();
   clockminute = myTZ.minute();
   clockseconds = myTZ.second();
-
-
 
   String myHr;
   myHr = String(clockhour);
@@ -3190,6 +3111,7 @@ void textanim5() {
   The MIT License (MIT)
 
   Copyright (c) 2015 tzapu
+  Modified by PhysTechAG in 2024
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
