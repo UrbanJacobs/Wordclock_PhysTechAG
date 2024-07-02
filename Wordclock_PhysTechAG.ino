@@ -375,29 +375,37 @@ void setup() {
     //Serial.println(user_wifi.password);
     WiFi.begin(user_wifi.ssid, user_wifi.password);
 
-
+    #define MAX_WIFI_TRIES 30
     byte tries = 0;
-    while (WiFi.status() != WL_CONNECTED) {
+    while ((WiFi.status() != WL_CONNECTED) && (mode == 0)) {
       delay(1000);
-      Serial.println("Trying to connect to wifi for up to 30 times");
-      if (tries++ > 30) {
+      Serial.printf("Trying to connect to wifi for up to %u times (%u/%u)\n", MAX_WIFI_TRIES, tries, MAX_WIFI_TRIES);
+      if (tries++ > MAX_WIFI_TRIES) {
         Serial.println("Failed to connect - making an access point so config can be re/entered - this will take 30ish seconds");
         WiFi.mode(WIFI_AP);
         WiFi.softAP("Clock Settings 192.168.4.1", "thirdstroke");
         mode = 1;
-        break;
       }
     }
 
 
     //get time
+    #define NTP_SYNC_TIMEOUT_SEC 30
     setInterval(600);
-    waitForSync(30);
+    if (mode == 0) {
+      Serial.printf("Waiting for NTP sync for up to %us\n", NTP_SYNC_TIMEOUT_SEC);
+      bool sync_successful = waitForSync(NTP_SYNC_TIMEOUT_SEC);
+      if (sync_successful)
+        Serial.println("NTP sync successful.");
+      else
+        Serial.println("NTP sync failed.");
+    }
+
     Serial.println();
-    Serial.println("UTC:             " + UTC.dateTime());
+    Serial.println("UTC: " + UTC.dateTime());
 
     myTZ.setLocation(mylocation);
-    Serial.print(F("Time in chosen location:     "));
+    Serial.print(F("Time in chosen location: "));
     Serial.println(myTZ.dateTime());
 
     Serial.println("Clock should be running now");
@@ -439,8 +447,6 @@ void loop() {
   events();
 
 
-  //normal clock mode
-  if (mode == 0) {
 
 
 
@@ -475,11 +481,11 @@ void loop() {
     }
 
 
-    //if longhold move mode on
+    //if longhold do factory reset
     if (buttonpressedtype == 4) {
-      mode = 1;
-      Serial.println("Mode change to");
-      Serial.println(mode);
+      factoryReset = 1;
+      Serial.println("Factory reset.");
+      delay(2000);
     }
 
 
@@ -510,12 +516,9 @@ void loop() {
     //}
     ///strip.show();
     //}
-  }
 
 
-  if (mode == 1) {
-    //this is factory reset mode;
-    factoryReset = 1;
+  if (factoryReset == 1) {
     //sets back config to basic config and enables wifi access point.
     saveConfig();
     ESP.restart();
@@ -523,14 +526,17 @@ void loop() {
 
 
 // Print time & IP address every 5 secs (for user info)
-#define INTERVAL 5000
+#define INFO_INTERVAL 5000
 static unsigned int last_time = 0;
-if ((millis() - last_time > INTERVAL) || (millis() < last_time)) {
-  Serial.println("UTC:             " + UTC.dateTime());
-  Serial.print(F("Time in chosen location:     "));
+if ((millis() - last_time > INFO_INTERVAL) || (millis() < last_time)) {
+  Serial.println("UTC: " + UTC.dateTime());
+  Serial.print(F("Time in chosen location: "));
   Serial.println(myTZ.dateTime());
   Serial.print("IP address: ");
-  Serial.println(WiFi.localIP());
+  if (mode == 0)
+    Serial.println(WiFi.localIP());
+  else
+    Serial.println("192.168.4.1 (Clock is Access Point)");
   last_time = millis();
 }
 
