@@ -124,7 +124,7 @@ boolean holdEventPast = false; // whether or not the hold event happened already
 boolean longHoldEventPast = false;// whether or not the long hold event happened already
 
 
-//#define countof(a) (sizeof(a) / sizeof(a[0]))
+#define countof(a) (sizeof(a) / sizeof(a[0]))
 
 
 bool loadConfig() {
@@ -565,25 +565,30 @@ void loop() {
       delay(2000);
     }
 
-
+    int previous_lights[countof(lights)];
+    memcpy(previous_lights, lights, sizeof(lights));
     empty_lights_array();
-    strip.clear();
-    pixelcolor = strip.Color(0, 0, 0);
-    for (int i = 0; i < strip.numPixels(); i++) { // For each pixel in strip...
-      strip.setPixelColor(i, pixelcolor);        //  Set pixel's color (in RAM)
-    }
-    strip.show();
-
     fill_lights_array();
-    strip.clear();
 
-    for (int i = 0; i < strip.numPixels(); i++) { // For each pixel in strip...
-      if (lights[i] == 1) {
-        //strip.setPixelColor(i, clockcolor);        //  Set pixel's color (in RAM)
-        strip.setPixelColor(MAX_IDX - i, clockcolor);
+    // Renew LED strip only if something changed (to avoid flickering)
+    if (memcmp(lights, previous_lights, sizeof(lights)) != 0) {
+      strip.clear();
+      pixelcolor = strip.Color(0, 0, 0);
+      for (int i = 0; i < strip.numPixels(); i++) { // For each pixel in strip...
+        strip.setPixelColor(i, pixelcolor);        //  Set pixel's color (in RAM)
       }
+      strip.show();
+
+      strip.clear();
+
+      for (int i = 0; i < strip.numPixels(); i++) { // For each pixel in strip...
+        if (lights[i] == 1) {
+          //strip.setPixelColor(i, clockcolor);        //  Set pixel's color (in RAM)
+          strip.setPixelColor(MAX_IDX - i, clockcolor);
+        }
+      }
+      strip.show();                          //  Update strip to match
     }
-    strip.show();                          //  Update strip to match
 
 
   if (factoryReset == 1) {
