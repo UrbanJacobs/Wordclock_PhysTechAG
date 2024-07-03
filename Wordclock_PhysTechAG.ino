@@ -573,13 +573,6 @@ void loop() {
     // Renew LED strip only if something changed (to avoid flickering)
     if (memcmp(lights, previous_lights, sizeof(lights)) != 0) {
       strip.clear();
-      pixelcolor = strip.Color(0, 0, 0);
-      for (int i = 0; i < strip.numPixels(); i++) { // For each pixel in strip...
-        strip.setPixelColor(i, pixelcolor);        //  Set pixel's color (in RAM)
-      }
-      strip.show();
-
-      strip.clear();
 
       for (int i = 0; i < strip.numPixels(); i++) { // For each pixel in strip...
         if (lights[i] == 1) {
