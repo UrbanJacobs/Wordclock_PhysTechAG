@@ -190,6 +190,9 @@ void LedControl::setChar(int addr, int digit, char value, boolean dp) {
         return;
     offset=addr*8;
     index=(byte)value;
+    // use the same representations for upper- and lowercase letters
+    if (index >= 97 && index <= 122)
+        index -= 32;
     if(index >127) {
         //no defined beyond index 127, so we use the space char
         index=32;
