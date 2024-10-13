@@ -182,6 +182,12 @@ class LedControl {
          * dp	sets the decimal point.
          */
         void setChar(int addr, int digit, char value, boolean dp);
+
+        /*
+         * Display a C-String on the 7-Segment stripe
+         * (starting from left).
+         */
+         void setStr(const char* str);
 };
 
 #endif	//LedControl.h

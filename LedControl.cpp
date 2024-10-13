@@ -168,6 +168,18 @@ void LedControl::setDigit(int addr, int digit, byte value, boolean dp) {
     spiTransfer(addr, digit+1,v);
 }
 
+void LedControl::setStr(const char* str) {
+    int maxlen = getDeviceCount() * 8;
+    int len = (strlen(str) <= maxlen) ? strlen(str) : maxlen;
+    int addr;
+    for (addr = 0; addr < getDeviceCount(); addr++)
+        clearDisplay(addr);
+    for (int i = 0; i <= len-1; i++) {
+        addr = i / 8;
+        setChar(addr, 7-(i-(addr*8)), str[i], false);
+    }
+}
+
 void LedControl::setChar(int addr, int digit, char value, boolean dp) {
     int offset;
     byte index,v;
