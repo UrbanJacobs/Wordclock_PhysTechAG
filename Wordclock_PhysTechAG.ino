@@ -30,6 +30,7 @@
 #include <EEPROM.h>
 #include "ezTime.h"
 #include "SPIFFS.h"
+#include "LedControl.h"
 
 
 /*********
@@ -61,6 +62,10 @@ Timezone myTZ;
 
 #define MAX_IDX (LED_COUNT - 1)
 
+#define DISP_DATA_PIN  12
+#define DISP_CLK_PIN   14
+#define DISP_CS_PIN    27
+#define NO_OF_MAX72XX   2
 
 /*********
   LED Config
@@ -70,6 +75,11 @@ Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRBW + NEO_KHZ800);
 //Declare matrix layout
 Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(16, 16, LED_PIN, NEO_MATRIX_TOP + NEO_MATRIX_RIGHT + NEO_MATRIX_COLUMNS + NEO_MATRIX_ZIGZAG, NEO_RGBW + NEO_KHZ800);
 
+/**********
+  Display config
+  (two 7-segment strips with MAX7219)
+*********/
+LedControl display = LedControl(DISP_DATA_PIN, DISP_CLK_PIN, DISP_CS_PIN, NO_OF_MAX72XX);
 
 
 /*********
@@ -432,6 +442,19 @@ void setup() {
   strip.show();            // Turn OFF all pixels ASAP
   strip.setBrightness(brightness); // Set BRIGHTNESS to about 1/5 (max = 255)
 
+  /* Setup display (two 7-segment stripes) */
+  // The MAX72XX is in power-saving mode on startup,
+  // we have to do a wakeup call
+  display.shutdown(0, false);
+  display.shutdown(1, false);
+  // Set brightness to lowest value
+  display.setIntensity(0, 0);
+  display.setIntensity(1, 0);
+  display.clearDisplay(0);
+  display.clearDisplay(1);
+  #define NO_OF_CHARS 16
+  char display_str[NO_OF_CHARS];
+
 
   if (!SPIFFS.begin()) {
     Serial.println("Failed to mount file system");
@@ -479,8 +502,12 @@ void setup() {
     while ((WiFi.status() != WL_CONNECTED) && (mode == 0)) {
       delay(1000);
       Serial.printf("Trying to connect to wifi for up to %u times (%u/%u)\n", MAX_WIFI_TRIES, tries, MAX_WIFI_TRIES);
+      memset(display_str, 0, NO_OF_CHARS);
+      snprintf(display_str, NO_OF_CHARS, "Conn try %02u-%02u", tries, MAX_WIFI_TRIES);
+      display.setStr(display_str);
       if (tries++ > MAX_WIFI_TRIES) {
         Serial.println("Failed to connect - making an access point so config can be re/entered - this will take 30ish seconds");
+        display.setStr("Acc-Point mode");
         WiFi.mode(WIFI_AP);
         WiFi.softAP("Clock Settings 192.168.4.1", "thirdstroke");
         mode = 1;
@@ -493,11 +520,18 @@ void setup() {
     setInterval(600);
     if (mode == 0) {
       Serial.printf("Waiting for NTP sync for up to %us\n", NTP_SYNC_TIMEOUT_SEC);
+      memset(display_str, 0, NO_OF_CHARS);
+      snprintf(display_str, NO_OF_CHARS, "%02us wait for NTP", NTP_SYNC_TIMEOUT_SEC);
+      display.setStr(display_str);
       bool sync_successful = waitForSync(NTP_SYNC_TIMEOUT_SEC);
-      if (sync_successful)
+      if (sync_successful) {
         Serial.println("NTP sync successful.");
-      else
+        display.setStr("NTP successful");
+      }
+      else {
         Serial.println("NTP sync failed.");
+        display.setStr("NTP failed");
+      }
     }
 
     Serial.println();
@@ -591,18 +625,39 @@ void loop() {
   }
 
 
-  // Print time & IP address every 5 secs (for user info)
-  #define INFO_INTERVAL 5000
+  // Show user info on UART & display
+  #define INFO_INTERVAL 10000   // 10 secs
   static unsigned int last_time = 0;
+  static boolean display_toggle = 0;
   if ((millis() - last_time > INFO_INTERVAL) || (millis() < last_time)) {
     Serial.println("UTC: " + UTC.dateTime());
     Serial.print(F("Time in chosen location: "));
     Serial.println(myTZ.dateTime());
     Serial.print("IP address: ");
-    if (mode == 0)
+    if (mode == 0) {
+      // UART
       Serial.println(WiFi.localIP());
-    else
-      Serial.println("192.168.4.1 (Clock is Access Point)");
+
+      // Display (show IP & SSID alternately)
+      if (display_toggle == 0) {
+        String outstr = WiFi.localIP().toString();
+        display.setStr(outstr.c_str());
+      }
+      else {
+        String outstr = WiFi.SSID();
+        display.setStr(outstr.c_str());
+      }
+    }
+    else {
+      Serial.println("192.168.4.1 (Clock is Access Point, Password thirdstroke)");
+
+      if (display_toggle == 0)
+        display.setStr("Acc-Point Mode");
+      else
+        display.setStr("Pwd thirdstroke");
+    }
+
+    display_toggle ^= 1;
     last_time = millis();
   }
 
