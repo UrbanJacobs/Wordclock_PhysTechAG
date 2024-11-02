@@ -521,7 +521,7 @@ void setup() {
     if (mode == 0) {
       Serial.printf("Waiting for NTP sync for up to %us\n", NTP_SYNC_TIMEOUT_SEC);
       memset(display_str, 0, NO_OF_CHARS);
-      snprintf(display_str, NO_OF_CHARS, "%02us wait for NTP", NTP_SYNC_TIMEOUT_SEC);
+      snprintf(display_str, NO_OF_CHARS, "NTP wait %02u sec", NTP_SYNC_TIMEOUT_SEC);
       display.setStr(display_str);
       bool sync_successful = waitForSync(NTP_SYNC_TIMEOUT_SEC);
       if (sync_successful) {
